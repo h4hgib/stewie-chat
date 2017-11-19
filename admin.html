@@ -4,24 +4,60 @@
     <title>Childline Chat</title>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font: 13px Helvetica, Arial; }
+    body { font: 13px Helvetica, Arial; background: #FCB712}
     form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
     form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
     form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
     #messages { list-style-type: none; margin: 0; padding: 0; }
-    #messages li { padding: 5px 10px; }
-    #messages li:nth-child(odd) { background: #eee; }
-    #messages { margin-bottom: 40px }
+    #messages li {
+        padding: 1.5rem;
+    }
+    #messages {
+        margin: 0.4rem;
+    }
+    #messages li span {
+        padding: 0.7rem 0.7rem;
+    }
+    #messages li[data-admin="false"] span {
+        background: #ffeec6;
+        color: #3e495d;
+        min-width: 50%;
+        border-radius: 0.5rem;
+        float: left;
+    }
+    #messages li[data-admin="true"] span {
+        background: #ebf2ff;
+        color: #3e495d;
+        min-width: 50%;
+        border-radius: 0.5rem;
+        float: right;
+    }
+
     #users li.disconnected {
         background: #f00;
     }
+    #users li {
+        padding: 0.4rem;
+        margin: 0.3rem;
+        list-style: none;
+        background: #FFEEC6;
+    }
+    #users li a {
+        color: #000;
+    }
     #users li.new-message {
         background: #0f0;
+    }
+    .show-more {
+        text-align: center;
+        margin: 0.4rem;
+        color: #fff;
     }
     </style>
 </head>
 <body>
 <ul id="users"></ul>
+<div class="show-more">Show More</div>
 <ul id="messages"></ul>
 <form action="">
     <input id="m" autocomplete="off" /><button>Send</button>
@@ -61,7 +97,7 @@ $(function () {
 console.log('chat message');
 console.log(msg);
         var id = msg.forId ? msg.forId : msg.fromId;
-        $('#messages').append($('<li>').data('user', msg.fromId).attr('data-id', id).text(msg.msg));
+        $('#messages').append($('<li>').attr('data-id', id).attr('data-admin', msg.forId ? 'true' : 'false').append($('<span>').data('user', msg.fromId).text(msg.msg)));
         window.scrollTo(0, document.body.scrollHeight);
 
         if(msg.disconnect) {
