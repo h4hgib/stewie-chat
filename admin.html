@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+    <title>Childline Chat</title>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font: 13px Helvetica, Arial; }
+    form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+    form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+    form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+    #messages { list-style-type: none; margin: 0; padding: 0; }
+    #messages li { padding: 5px 10px; }
+    #messages li:nth-child(odd) { background: #eee; }
+    #messages { margin-bottom: 40px }
+    #users li.disconnected {
+        background: #f00;
+    }
+    #users li.new-message {
+        background: #0f0;
+    }
+    </style>
+</head>
+<body>
+<ul id="users"></ul>
+<ul id="messages"></ul>
+<form action="">
+    <input id="m" autocomplete="off" /><button>Send</button>
+</form>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+var forId = null;
+
+updateForId = function(id) {
+    console.log('updateForId()');
+    forId = id;
+    var chats     = document.querySelectorAll('ul#messages li'),
+        showChats = document.querySelectorAll('ul#messages li[data-id="'+id+'"]'),
+        i;
+
+    for(i = 0; i < chats.length; i++) {
+        chats[i].style.display = 'none';
+    }
+
+    for(i = 0; i < showChats.length; i++) {
+        showChats[i].style.display = 'block';
+    }
+
+    document.querySelector('ul#users li[data-id="'+id+'"]').classList.remove('new-message');
+}
+
+$(function () {
+    var socket = io();
+    $('form').submit(function() {
+        socket.emit('admin message', { msg: $('#m').val(), forId : forId });
+        $('#m').val('');
+        return false;
+    });
+
+    socket.on('chat message', function(msg) {
+console.log('chat message');
+console.log(msg);
+        var id = msg.forId ? msg.forId : msg.fromId;
+        $('#messages').append($('<li>').data('user', msg.fromId).attr('data-id', id).text(msg.msg));
+        window.scrollTo(0, document.body.scrollHeight);
+
+        if(msg.disconnect) {
+            document.querySelector('ul#users li[data-id="'+msg.fromId+'"]').classList.add('disconnected');
+        } else {
+            document.querySelector('ul#users li[data-id="'+msg.fromId+'"]').classList.add('new-message');
+        }
+        updateForId(forId);
+    });
+
+    socket.on('new user', function(msg) {
+console.log('new user');
+console.log(msg);
+        let i = 0,
+            o = '',
+            u = 1;
+
+        for(i = 0; i < msg.length; i++) {
+            if(msg[i] === null) {
+                return;
+            }
+            u = msg[i].name ? msg[i].name : 'User ' + (i + 1);
+            o += '<li data-id="' + msg[i].id + '" data-user="'+ u + '"><a href="javascript:updateForId(\'' + msg[i].id + '\');">'+ u + '</a></li>';
+        }
+        $('#users').html(o);
+
+        window.scrollTo(0, document.body.scrollHeight);
+    });
+});
+</script>
+</body>
+</html>
